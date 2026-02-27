@@ -1,81 +1,344 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <script src="https://unpkg.com/ml5@0.4.3/dist/ml5.min.js"></script>
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-    
-    <title>p5.play.Mario</title>
-    <!-- link p5.js and its addons like p5.dom.js or p5.sound.js -->
-    <script src="lib/p5.min.js" type="text/javascript"></script>
-    <!-- link p5.play.js -->
-    <script src="lib/p5.play.js" type="text/javascript"></script>
-    <!-- link p5.dom.js -->
-    <script src="lib/p5.dom.js" type="text/javascript"></script>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍄 AI Mario — LS Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-    <!-- link your javascript sketch -->
-    <script src="scripts/sprites.js" type="text/javascript"></script>
-
-    <script src="main.js" type="text/javascript"></script>
-
-    <script src="characters_environment.js" type="text/javascript"></script>
-
-    <link rel="stylesheet" type="text/css" href="style.css">
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.0.0/addons/p5.sound.min.js"></script>
-
-  </head>
-  
-  <body background="background.jpg">
-    <center>
-      
-      <div class="btn btn-primary heading">
-        <h3>AI MARIO GAME </h3>
-        <button class="btn btn-primary"  data-toggle="modal" data-target="#myModal">Instructions</button>
+  <!-- ══════════════════════════════════════
+       LS STUDIO SPLASH SCREEN
+  ══════════════════════════════════════ -->
+  <div id="ls-splash">
+    <div class="splash-inner">
+      <div class="ls-logo-mark">LS</div>
+      <div class="ls-text">
+        <div class="ls-name">LS STUDIO</div>
+        <div class="ls-sub">by Yatharth</div>
       </div>
+      <div class="ls-bar-wrap">
+        <div class="ls-bar" id="lsBar"></div>
+      </div>
+      <div class="ls-load-txt" id="lsTxt">LOADING...</div>
+    </div>
+    <div class="ls-presents">LS STUDIO PRESENTS</div>
+  </div>
 
-      <img src="mario.jpg" class="big_image">
-      <br><br>
-      <button class="btn btn-success" onclick="startGame()" id="start">Play Game</button>
-      <br><br>
-      <h3 id="status" class="btn btn-warning"></h3>
-      <br><br>
-      
-      <div id="canvas"></div>
-      <div id="game_console"></div>
+  <!-- floating pixel particles -->
+  <div class="pixels-bg" id="pixelsBg"></div>
 
+  <!-- ══════════════════════════════════════
+       FIXED HEADER
+  ══════════════════════════════════════ -->
+  <header id="main-header">
+    <div class="logo">🍄 AI MARIO</div>
+    <div class="header-right">
+      <span class="badge badge-p5">p5.js</span>
+      <span class="badge badge-ml5">ml5 · PoseNet</span>
+      <span class="ls-tag"><span class="ls-dot"></span>LS Studio</span>
+    </div>
+  </header>
 
-      
+  <!-- ══════════════════════════════════════
+       MAIN PAGE
+  ══════════════════════════════════════ -->
+  <div class="page">
 
+    <!-- hero -->
+    <div class="game-hero">
+      <h1>CONTROL WITH YOUR BODY</h1>
+      <p>Tilt head <span>left / right</span> to move &nbsp;·&nbsp; Look <span>up</span> to jump</p>
+    </div>
 
-      <h4>Source Code : <a href="https://github.com/linuk">Linuk</a> ||  Game Credit : Mario</h4>
+    <!-- ── MAIN GRID ───────────────────── -->
+    <div class="game-layout">
 
+      <!-- LEFT: Game Canvas -->
+      <div class="canvas-col">
 
+        <div class="canvas-container">
+          <!--
+            id="game-canvas" → p5.js injects <canvas> here via:
+            createCanvas(w,h).parent('game-canvas')  ← in main.js setup()
+          -->
+          <div id="game-canvas"></div>
+        </div>
 
-      <div id="myModal" class="modal fade ">
-        <div class="modal-dialog" >
-          <!-- Modal content-->
-          <div class="modal-content">
-      
-            <div class="modal-header">
-              <button class="close" data-dismiss="modal">&times;</button>
-              <h4>Instructions</h4>
+        <!-- HUD bar below canvas — updated by updateHUD() in this file -->
+        <div class="statusbar">
+          <div class="stat">
+            <span class="stat-icon">🏆</span>
+            <div>
+              <span class="stat-lbl">SCORE</span>
+              <!-- id="hud-score" written by updateHUD() -->
+              <span class="stat-val" id="hud-score">0</span>
             </div>
-      
-             <div class="modal-body">
-                <img src="jump.png" class="img-responsive instruction_image">
-                <img src="right.png" class="img-responsive instruction_image">
-                <img src="left.png" class="img-responsive instruction_image">
-              </div>
-
+          </div>
+          <div class="stat">
+            <span class="stat-icon">🍄</span>
+            <div>
+              <span class="stat-lbl">LEVEL</span>
+              <span class="stat-val">1-1</span>
+            </div>
+          </div>
+          <div class="stat">
+            <span class="stat-icon">⏱</span>
+            <div>
+              <span class="stat-lbl">TIME</span>
+              <!-- id="hud-time" written by updateHUD() -->
+              <span class="stat-val" id="hud-time">000</span>
+            </div>
+          </div>
+          <div class="stat">
+            <span class="stat-icon">💰</span>
+            <div>
+              <span class="stat-lbl">COINS</span>
+              <!-- id="hud-coins" written by updateHUD() -->
+              <span class="stat-val gold" id="hud-coins">×00</span>
+            </div>
           </div>
         </div>
-      </div>
+      </div><!-- /canvas-col -->
 
-      
-</center>
-  </body>
+      <!-- RIGHT: Sidebar -->
+      <div class="sidebar">
+
+        <!-- CAMERA CARD
+             id="game_console" → p5.js injects <video> here via:
+             video.parent('game_console')  ← in main.js setup()
+        -->
+        <div class="card card-camera">
+          <div class="card-title">📷 CAMERA FEED</div>
+          <div class="cam-wrap">
+            <div id="game_console"></div>
+            <div class="cam-overlay"></div>
+            <!-- id="trackPulse" toggled by updateTracking() -->
+            <div class="track-pulse" id="trackPulse"></div>
+            <!-- id="trackStatus" text set by updateTracking() -->
+            <div class="track-status searching" id="trackStatus">SEARCHING...</div>
+          </div>
+        </div>
+
+        <!-- PLAY BUTTON CARD
+             onclick="startGame()" → startGame() defined in characters_environment.js
+             id="game-status"      → text set by startGame(), modelLoaded(), updateTracking()
+        -->
+        <div class="card">
+          <div class="card-title">🎮 START GAME</div>
+          <button id="start-btn" onclick="startGame()">▶ PLAY</button>
+          <div id="game-status">WAITING FOR CAMERA...</div>
+        </div>
+
+        <!-- LIVE STATS
+             ids: stat-kills, stat-coins, stat-score → updated by updateHUD()
+             class: heart → toggled alive/lost by updateHUD()
+        -->
+        <div class="card">
+          <div class="card-title">📊 LIVE STATS</div>
+          <div class="score-grid">
+            <div class="score-row">
+              <span class="score-key">LIVES</span>
+              <div class="hearts" id="hearts-wrap">
+                <span class="heart alive">❤️</span>
+                <span class="heart alive">❤️</span>
+                <span class="heart alive">❤️</span>
+                <span class="heart alive">❤️</span>
+              </div>
+            </div>
+            <div class="score-row">
+              <span class="score-key">KILLS</span>
+              <span class="score-val red" id="stat-kills">0</span>
+            </div>
+            <div class="score-row">
+              <span class="score-key">COINS</span>
+              <span class="score-val gold" id="stat-coins">0</span>
+            </div>
+            <div class="score-row">
+              <span class="score-key">SCORE</span>
+              <span class="score-val" id="stat-score">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- HIGHSCORE
+             id="hs-val" → updated by updateHUD() via localStorage
+        -->
+        <div class="card">
+          <div class="hs-banner">
+            <div class="hs-label">🏆 HIGH SCORE</div>
+            <div class="hs-val" id="hs-val">0</div>
+          </div>
+        </div>
+
+        <!-- HOW TO PLAY -->
+        <div class="card">
+          <div class="card-title">📖 HOW TO PLAY</div>
+          <div class="steps">
+            <div class="step"><div class="step-n">1</div><div class="step-t">Allow <strong>camera access</strong></div></div>
+            <div class="step"><div class="step-n">2</div><div class="step-t">Wait for <strong>PoseNet</strong> to find your face</div></div>
+            <div class="step"><div class="step-n">3</div><div class="step-t">Tilt head <strong>left / right</strong> to move</div></div>
+            <div class="step"><div class="step-n">4</div><div class="step-t">Look <strong>up</strong> to jump · <strong>SPACE</strong> to restart</div></div>
+          </div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="card">
+          <div class="card-title">⌨️ CONTROLS</div>
+          <div class="ctrl-grid">
+            <div class="ctrl-item"><span class="ctrl-icon">←</span><div><div class="ctrl-lbl">Move Left</div><div class="ctrl-sub">Nose X &lt; 300</div></div></div>
+            <div class="ctrl-item"><span class="ctrl-icon">→</span><div><div class="ctrl-lbl">Move Right</div><div class="ctrl-sub">Nose X &gt; 300</div></div></div>
+            <div class="ctrl-item"><span class="ctrl-icon">↑</span><div><div class="ctrl-lbl">Jump</div><div class="ctrl-sub">Nose Y &lt; 200</div></div></div>
+            <div class="ctrl-item"><span class="ctrl-icon">⎵</span><div><div class="ctrl-lbl">Restart</div><div class="ctrl-sub">Game Over</div></div></div>
+          </div>
+        </div>
+
+      </div><!-- /sidebar -->
+    </div><!-- /game-layout -->
+
+    <footer>
+      <div class="footer-brand">
+        <span class="footer-ls">LS STUDIO</span>
+        <span class="footer-sep">×</span>
+        <span class="footer-name">Yatharth</span>
+      </div>
+      <div class="footer-copy">Built with <span class="heart-red">♥</span> · p5.js · ml5.js PoseNet · p5.play</div>
+    </footer>
+
+  </div><!-- /page -->
+
+  <!-- ══════════════════════════════════════
+       SCRIPTS — load order matters!
+       1. p5.js       (core library)
+       2. p5_play.js  (sprite engine)
+       3. ml5.js      (AI / PoseNet)
+       4. sprites.js  (defines setSprites, MarioAnimation — uses p5 + p5_play)
+       5. characters_environment.js  (game logic — uses sprites globals)
+       6. main.js     (setup/draw — uses everything above)
+       7. inline JS   (HUD, splash, particles — runs after DOM ready)
+  ══════════════════════════════════════ -->
+  <script src="p5.js"></script>
+  <script src="p5_play.js"></script>
+  <script src="https://unpkg.com/ml5@0.5.0/dist/ml5.min.js"></script>
+  <script src="sprites.js"></script>
+  <script src="characters_environment.js"></script>
+  <script src="main.js"></script>
+
+  <script>
+    /* ────────────────────────────────────────────────
+       INLINE JS — wires HTML elements to game state
+       Runs after all game scripts are loaded
+    ──────────────────────────────────────────────── */
+
+    /* 1. Pixel particles background */
+    (function spawnPixels() {
+      var bg   = document.getElementById('pixelsBg');
+      var cols = ['#6d8fff','#e52222','#f7c948','#2dc653','#ffffff'];
+      for (var i = 0; i < 40; i++) {
+        var d = document.createElement('div');
+        d.className = 'pixel-dot';
+        d.style.left              = (Math.random() * 100) + 'vw';
+        d.style.background        = cols[i % cols.length];
+        d.style.animationDuration = (10 + Math.random() * 18) + 's';
+        d.style.animationDelay    = (Math.random() * 20) + 's';
+        d.style.opacity           = 0.15 + Math.random() * 0.35;
+        bg.appendChild(d);
+      }
+    })();
+
+    /* 2. HUD updater — reads from gameConfig + mario (defined in characters_environment.js) */
+    var _hs = parseInt(localStorage.getItem('marioHS') || '0');
+    document.getElementById('hs-val').textContent = _hs;
+
+    function updateHUD() {
+      /* gameConfig is a global from characters_environment.js */
+      if (typeof gameConfig === 'undefined') return;
+
+      var score = Math.round(gameConfig.scores);
+      var time  = Math.round(gameConfig.timeScores);
+      /* mario is a global sprite created in sprites.js → MarioAnimation() */
+      var coins = (typeof mario !== 'undefined') ? mario.coins      : 0;
+      var kills = (typeof mario !== 'undefined') ? mario.kills      : 0;
+      var lives = (typeof mario !== 'undefined') ? mario.liveNumber : 4;
+
+      /* Update HUD bar */
+      document.getElementById('hud-score').textContent = score;
+      document.getElementById('hud-time').textContent  = String(time).padStart(3, '0');
+      document.getElementById('hud-coins').textContent = '×' + String(coins).padStart(2, '0');
+
+      /* Update sidebar stats */
+      document.getElementById('stat-score').textContent = score;
+      document.getElementById('stat-coins').textContent = coins;
+      document.getElementById('stat-kills').textContent = kills;
+
+      /* Update hearts */
+      document.querySelectorAll('.heart').forEach(function(h, i) {
+        if (i < lives) { h.classList.add('alive');  h.classList.remove('lost'); }
+        else            { h.classList.remove('alive'); h.classList.add('lost'); }
+      });
+
+      /* Highscore */
+      if (score > _hs) {
+        _hs = score;
+        localStorage.setItem('marioHS', _hs);
+        document.getElementById('hs-val').textContent = _hs;
+      }
+    }
+    setInterval(updateHUD, 250);
+
+    /* 3. Camera / PoseNet tracking status
+          noseX is a global set in main.js → gotPoses() */
+    function updateTracking() {
+      if (typeof noseX === 'undefined') return;
+      var pulse  = document.getElementById('trackPulse');
+      var status = document.getElementById('trackStatus');
+      var gstat  = document.getElementById('game-status');
+
+      if (noseX !== '') {
+        pulse.classList.add('on');
+        status.className = 'track-status ok';
+        status.textContent = '● TRACKING';
+        /* Only update if game hasn't started yet */
+        if (typeof gameConfig !== 'undefined' && gameConfig.status === 'start') {
+          gstat.textContent = 'FACE DETECTED — PRESS PLAY!';
+        }
+      } else {
+        pulse.classList.remove('on');
+        status.className = 'track-status searching';
+        status.textContent = 'SEARCHING...';
+      }
+    }
+    setInterval(updateTracking, 400);
+
+    /* 4. LS Studio splash screen animation */
+    (function runSplash() {
+      var bar  = document.getElementById('lsBar');
+      var txt  = document.getElementById('lsTxt');
+      var sp   = document.getElementById('ls-splash');
+      var msgs = ['LOADING...', 'INITIALIZING ENGINE...', 'LOADING SPRITES...', 'SETTING UP AI...', '✓ READY!'];
+      var p = 0, mi = 0;
+
+      /* Start after logo animation (~1.3s) */
+      setTimeout(function() {
+        var iv = setInterval(function() {
+          p += Math.random() * 9 + 4;
+          if (p >= 100) p = 100;
+          bar.style.width = p + '%';
+
+          var ni = Math.floor((p / 100) * (msgs.length - 1));
+          if (ni !== mi) { mi = ni; txt.textContent = msgs[mi]; }
+
+          if (p >= 100) {
+            clearInterval(iv);
+            setTimeout(function() { sp.classList.add('hidden'); }, 700);
+          }
+        }, 110);
+      }, 1300);
+    })();
+  </script>
+
+</body>
 </html>
